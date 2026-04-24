@@ -3,7 +3,7 @@ proc r;
     library(tidyverse)
     carsdf <- sd2df("sashelp.cars")
     carsAudi <- carsdf %>% filter(Make == "Audi")
-    df2sd(carsAudi, "AUDI", "WORK");
+    df2sd(carsAudi, "AUDI");
     endsubmit;
 run;
  

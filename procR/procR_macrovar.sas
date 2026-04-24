@@ -42,7 +42,7 @@ filter(Make == VMake)
 avg_msrp <- mean(mycars$MSRP, na.rm = TRUE)
 symput("AvgPrice", avg_msrp)
  
-df2sd(mycars, "filtered_cars", "WORK")
+df2sd(mycars, "filtered_cars")
 endsubmit;
 run;
  

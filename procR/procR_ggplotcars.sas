@@ -19,6 +19,6 @@ rplot(quote(plot(mtcars$MPG_City, mtcars$Weight,
 
 
 
-df2sd(mtcars, "cars_r","work")
+df2sd(mtcars, "cars_r")
 endsubmit;
 run;
