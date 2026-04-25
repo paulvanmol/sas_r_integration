@@ -206,7 +206,7 @@ proc r;
     out <- aggregate(CHG ~ TRT01P + AVISIT, df, mean)
 
     # df2sd: data frame, dataset name, libname
-    df2sd(out, "r_means", "work")
+    df2sd(out, "work.r_means")
   endsubmit;
 run;
 ```
@@ -482,8 +482,8 @@ Note the difference in Python vs R callback syntax:
 
 | | Python (PROC PYTHON) | R (PROC R) |
 |-|----------------------|------------|
-| SAS dataset → language | `SAS.sd2df("work.ds")` | `sd2df("ds", "work")` |
-| language → SAS dataset | `SAS.df2sd(df, "ds")` | `df2sd(df, "ds", "work")` |
+| SAS dataset → language | `SAS.sd2df("work.ds")` | `sd2df("work.ds")` |
+| language → SAS dataset | `SAS.df2sd(df, "work.ds")` | `df2sd(df, "work.ds")` |
 | Read macro variable | `SAS.symget("macvar")` | `symget("macvar")` |
 | Write macro variable | `SAS.symput("macvar","v")` | `symput("macvar","v")` |
 
