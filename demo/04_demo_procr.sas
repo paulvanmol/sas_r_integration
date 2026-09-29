@@ -16,7 +16,7 @@
   │  Data Transfer                                                       │
   │    sd2df("dataset", "libname")   SAS dataset → R data frame         │
   │    → always follow with: names(df) <- toupper(names(df))            │
-  │    df2sd(df, "dataset", "lib")   R data frame → SAS dataset         │
+  │    df2sd(df, "lib.dataset")       R data frame → SAS dataset         │
   │                                                                      │
   │  Macro Variables                                                     │
   │    symget("macvar")              Read SAS macro variable             │
@@ -79,7 +79,7 @@ proc r;
     # Pattern:
     #   df  <- trim_char_widths(df)
     #   symput("my_lengths", sas_length_stmt(df))
-    #   df2sd(df, "raw_ds", "work")
+    #   df2sd(df, "work.raw_ds")
     #   -- back in SAS --
     #   data work.final_ds; &my_lengths. set work.raw_ds; run;
     # ------------------------------------------------------------------
@@ -123,7 +123,7 @@ proc r;
     len_stmt <- paste("length", paste(len_parts, collapse = " "), ";")
     symput("r_pkg_lengths", len_stmt)
 
-    df2sd(pkgs, "r_packages_raw", "work")
+    df2sd(pkgs, "work.r_packages_raw")
     cat("Lengths macro: ", len_stmt, "\n")
   endsubmit;
 run;
@@ -185,8 +185,8 @@ run;
 
 /*=============================================================================
   SECTION 2: Data Transfer – sd2df() and df2sd()
-  sd2df("dataset", "libname")  pulls a SAS dataset into R as a data frame.
-  df2sd(df, "dataset", "lib")  pushes an R data frame back to SAS.
+  sd2df("lib.dataset")  pulls a SAS dataset into R as a data frame.
+  df2sd(df, "lib.dataset",)  pushes an R data frame back to SAS.
   Note: libname is a separate third argument, not dot-notation.
 =============================================================================*/
 
@@ -212,7 +212,7 @@ run;
 proc r;
   submit;
     library(dplyr)
-    df <- sd2df("adlb", "work")
+    df <- sd2df("work.adlb")
     names(df) <- toupper(names(df))
 
     summary_df <- df |>
@@ -231,7 +231,7 @@ proc r;
 
     summary_df <- trim_char_widths(summary_df)
     symput("r_summary_lengths", sas_length_stmt(summary_df))
-    df2sd(summary_df, "r_summary_raw", "work")
+    df2sd(summary_df, "work.r_summary_raw")
     cat("Written to work.r_summary_raw\n")
   endsubmit;
 run;
@@ -430,7 +430,7 @@ run;
 -------------------------------------------------------------------- */
 proc r restart;
   submit;
-    # Redefine helper after restart (proc r restart clears all R objects)
+     # Redefine helper after restart (proc r restart clears all R objects)
     trim_char_widths <- function(df, min_width = 1L) {
       char_cols <- sapply(df, is.character)
       df[char_cols] <- lapply(df[char_cols], function(col) {
@@ -441,7 +441,28 @@ proc r restart;
       })
       df
     }
-
+    # ------------------------------------------------------------------
+    # Helper 2: generate a SAS LENGTH statement string from a data frame.
+    # Write it to a SAS macro variable with symput(), then use it in a
+    # DATA step to re-stamp column widths after df2sd().
+    #
+    # Pattern:
+    #   df  <- trim_char_widths(df)
+    #   symput("my_lengths", sas_length_stmt(df))
+    #   df2sd(df, "work.raw_ds")
+    #   -- back in SAS --
+    #   data work.final_ds; &my_lengths. set work.raw_ds; run;
+    # ------------------------------------------------------------------
+    sas_length_stmt <- function(df, min_width = 1L) {
+      char_cols <- names(df)[sapply(df, is.character)]
+      if (length(char_cols) == 0) return("")
+      parts <- sapply(char_cols, function(col) {
+        max_len <- max(nchar(df[[col]], type = "bytes"), na.rm = TRUE)
+        max_len <- max(max_len, min_width, na.rm = TRUE)
+        paste0(col, " $", max_len)
+      })
+      paste("length", paste(parts, collapse = " "), ";")
+    }
     df <- sd2df("adlb", "work")
     names(df) <- toupper(names(df))
     df$AVISIT  <- factor(df$AVISIT,
@@ -487,7 +508,7 @@ proc r restart;
     show(fe, title = "R Mixed Model Fixed Effects")
     fe <- trim_char_widths(fe)
     symput("r_mmrm_lengths", sas_length_stmt(fe))
-    df2sd(fe, "r_mmrm_fe_raw", "work")
+    df2sd(fe, "work.r_mmrm_fe_raw")
     cat("Results written to work.r_mmrm_fe_raw\n")
   endsubmit;
 run;
@@ -614,7 +635,7 @@ proc r;
     show(med_df, title = "Median Overall Survival")
     med_df <- trim_char_widths(med_df)
     symput("r_km_lengths", sas_length_stmt(med_df))
-    df2sd(med_df, "r_km_median_raw", "work")
+    df2sd(med_df, "work.r_km_median_raw")
   endsubmit;
 run;
 
@@ -685,9 +706,9 @@ run;
 
   Callback Quick Reference (case-sensitive):
   ┌──────────────────────────────────────────────────────────────────────┐
-  │  sd2df("ds", "lib")          SAS dataset → R data frame             │
-  │  df2sd(df, "ds", "lib")      R data frame → SAS dataset             │
-  │    → call trim_char_widths(df) first to avoid $32767 columns        │
+  │  sd2df("lib.ds")             SAS dataset → R data frame              │
+  │  df2sd(df, "lib.ds")         R data frame → SAS dataset              │
+  │    → call trim_char_widths(df) first to avoid $32767 columns         │
   │  symget("macvar")            Read SAS macro variable                 │
   │  symput("macvar", "value")   Write value → SAS macro variable        │
   │  submit("sas code")          Execute SAS code from R                 │
