@@ -567,7 +567,7 @@ title;
     - df2sd() uses separate dataset/libname arguments, not dot-notation
     - names(df) <- toupper() (not tolower) for consistent uppercase refs
     - _raw + sas_length_stmt() + proc delete for $32767 fix
-    - R comments use # not /* */
+    - R comments use # not 
     - dot in column name STD.ERROR → STD_ERROR (validvarname=v7 handled)
     - proc print var list updated to match actual column names
 =============================================================================*/

@@ -14,7 +14,7 @@
     - ADSL dataset at &path./adam/adsl.sas7bdat
 =============================================================================*/
 
-%let path     = /srv/nfs/kubedata/compute-landingzone/sbxpav/r_integration;
+%let path     =/srv/nfs/kubedata/compute-landingzone/sbxpav/sas_r_integration;
 %let workpath = %sysfunc(pathname(work));
 
 proc r;
@@ -29,7 +29,7 @@ proc r;
 
     # Build the full path to the SAS dataset
     # paste0() avoids the unwanted space that paste() adds by default
-    adsl_path <- paste0(path, "/adam/adsl.sas7bdat")
+    adsl_path <- paste0(path, "/data/adam/adsl.sas7bdat")
     cat("Reading:", adsl_path, "\n")
 
     adsl <- read_sas(adsl_path)

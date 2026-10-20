@@ -208,7 +208,7 @@ show(summary_tbl, title = "Per-sex model performance")
 
 # Write summary back to SAS for potential TFL use
 summary_tbl <- trim_char_widths(summary_tbl)
-df2sd(summary_tbl, "r_model_summary", "work")
+df2sd(summary_tbl, "work.r_model_summary")
 cat("Summary written to work.r_model_summary\n")
 
 endsubmit;
